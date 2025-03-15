@@ -285,13 +285,10 @@ DEVICE_CUSTOMIZES = {
         'button_actions': 'cancel_cooking,pause',
         'select_actions': 'start_cook',
     },
-    'chunmi.health_pot.a1': {
-        'select_actions': 'start_cook',
-    },
-    'chunmi.health_pot.cmpa1': {
-        'select_actions': 'start_cook',
-    },
-    'chunmi.health_pot.zwza1': {
+    'chunmi.health_pot.*': {
+        'sensor_properties': 'fault,left_time,temperature,kw_temperature,ctrl_temperature,power_value,cook_mode,'
+                             'cook_total_time,kw_left_time,kw_total_time,pre_left_time,cur_left_time',
+        'switch_properties': 'auto_keepwarm',
         'select_actions': 'start_cook',
     },
     'chunmi.microwave.n23l01': {
@@ -817,7 +814,6 @@ DEVICE_CUSTOMIZES = {
     },
     'hyd.airer.lyjpro': {
         **CHUNK_1,
-        'position_reverse': True,
         'cover_position_mapping': {},
     },
     'hyd.airer.pro': {
@@ -825,8 +821,8 @@ DEVICE_CUSTOMIZES = {
         'number_properties': 'brightness,upper_limit,lower_limit',
         'append_converters': [
             {
-                'services': ['set_night_light'],
-                'converters': [{'props': ['current_position', 'set_position']}],
+                'services': ['airer'],
+                'converters': [{'props': ['*.current_position', '*.set_position']}],
             }
         ],
         'target_position_props': 'set_position',
@@ -834,11 +830,13 @@ DEVICE_CUSTOMIZES = {
     },
     'hyd.airer.pro2': {
         'switch_properties': 'mode,nightlight_switch',
+        'select_properties': None,
         'number_properties': 'brightness,upper_limit,lower_limit',
         'append_converters': [
             {
-                'services': ['set_night_light'],
-                'converters': [{'props': ['current_position', 'set_position']}],
+                'class': MiotCoverConv,
+                'services': ['airer'],
+                'converters': [{'props': ['*.current_position', '*.set_position']}],
             }
         ],
         'target_position_props': 'set_position',
@@ -852,8 +850,6 @@ DEVICE_CUSTOMIZES = {
         'select_properties': 'mode,dryer',
         'number_properties': 'drying_time',
         'exclude_miot_properties': 'motor_control',
-        'disable_target_position': True,
-        'position_reverse': False,
         'cover_position_mapping': {
             0: 50,
             1: 100,
@@ -881,11 +877,23 @@ DEVICE_CUSTOMIZES = {
         'device_class': 'duration',
     },
     'ijai.vacuum.*': {
-        'sensor_properties': 'vacuum.status,main_brush_life,side_brush_life,hypa_life,mop_life',
+        'interval_seconds': 120,
+        'button_actions': 'start_sweep*,start_only_sweep,start_mop,start_charge,stop_*',
+        'sensor_properties': 'vacuum.status,door_state,main_brush_life,side_brush_life,hypa_life,mop_life',
         'switch_properties': 'vacuum.on,repeat_state,alarm',
-        'select_properties': 'mode,sweep_type,water_state',
+        'select_properties': 'mode,sweep_type,suction_state,water_state',
         'exclude_miot_services': 'order',
-        'exclude_miot_properties': 'zone_points,restrict_points,target_point',
+        'exclude_miot_properties': '*_points,multi_prop_vacuum,cur_cleaning_path,consumablesinfo',
+        'chunk_coordinators': [
+            {'interval': 21, 'props': 'status,mode,sweep_type,suction_state'},
+            {'interval': 31, 'props': 'water-state,repeat-state,mop-route'},
+            {'interval': 41, 'props': 'ai-recognize,dirt-recognize,pet-recognize,repeat-state,cloth-state'},
+            {'interval': 81, 'props': 'remember-state,cur-map-id,build-map,has-new-map'},
+            {'interval': 91, 'props': 'alarm,volume,door-state,cleaning-time,cleaning-area,carpet-booster'},
+            {'interval': 131, 'props': 'battery-level,tank-shake,shake-shift,map-encrypt,target-point'},
+            {'interval': 300, 'props': 'main_brush_*,side_brush_*,hypa_*,mop_life,mop_hours,map-num'},
+            {'interval': 999, 'props': 'time-zone,cur-lang,multi-prop-vacuum'},
+        ],
     },
     'ijomoo.toilet.zs320': {
         'state_property': 'toilet_jomoo.seat_status',
@@ -984,7 +992,10 @@ DEVICE_CUSTOMIZES = {
         'interval_seconds': 120,
         'exclude_miot_properties': 'mode,fault',
         'chunk_coordinators': [
-            {'interval': 30, 'props': 'on,target-temperature,temperature,left_time'},
+            {'interval': 31, 'props': 'on'},
+            {'interval': 41, 'props': 'target_temperature'},
+            {'interval': 51, 'props': 'temperature'},
+            {'interval': 61, 'props': 'left_time'},
         ],
     },
     'leishi.bhf_light.lsyb01': {
@@ -1101,7 +1112,6 @@ DEVICE_CUSTOMIZES = {
     'lumi.airer.acn01': {
         'select_properties': 'dry_mode',
         'motor_reverse': False,
-        'position_reverse': True,
         'target2current_position': True,
     },
     'lumi.ctrl_ln2.aq1': {
@@ -1296,7 +1306,6 @@ DEVICE_CUSTOMIZES = {
         'miot_type': 'urn:miot-spec-v2:device:airer:0000A00D:mrbond-m1pro:1',
     },
     'mrbond.airer.m53pro': {
-        'position_reverse': False,
         'sensor_properties': 'fault,left_time',
         'select_properties': 'dryer,drying_level',
         'switch_properties': '',
@@ -1514,9 +1523,9 @@ DEVICE_CUSTOMIZES = {
         'unit_of_measurement': 'min',
     },
     'roidmi.vacuum.v60': {
-        'interval_seconds': 180,
-        'button_actions': 'start_sweep,stop_sweeping,find_robot,stop_find_charge,continue_sweep,start_dust,pause,'
-                          'pause_find_charge,continue_find_charge,reset_filter_life,reset_brush_life',
+        'interval_seconds': 81,
+        'button_actions': 'start_sweep,stop_sweeping,pause,continue_sweep,find_robot,start_charge,stop_find_charge,'
+                          'pause_find_charge,continue_find_charge,start_dust,reset_filter_life,reset_brush_life',
         'binary_sensor_properties': 'mop',
         'sensor_properties': 'status,fault,clean_area,clean_time,filter_life_level,brush_life_level',
         'switch_properties': 'auto_boost,double_clean,edge_sweep,led_switch,lidar_collision,mute,map_memory,'
@@ -1526,10 +1535,13 @@ DEVICE_CUSTOMIZES = {
         'exclude_miot_services': None,
         'exclude_miot_properties': 'vacuum.on,custom.progress,station_type,voice_conf,app_state,sweep_mode',
         'chunk_coordinators': [
-            {'interval': 15, 'props': 'status,clean_area,clean_time,mode,sweep_type,water_level', 'notify': True},
-            {'interval': 60, 'props': 'mop,auto_boost,double_clean,edge_sweep,led_switch,lidar_collision,mute'},
-            {'interval': 600, 'props': 'filter_life_level,filter_left_time,brush_life_level,brush_left_time'},
-            {'interval': 610, 'props': 'custom.uid,custom.timing,forbid_mode,current_audio,map_memory,use_auto_area'},
+            {'interval': 21, 'props': 'status,mode,sweep_type,charging_state', 'notify': True},
+            {'interval': 41, 'props': 'fault,mop,water_level'},
+            {'interval': 61, 'props': 'double_clean,edge_sweep,battery_level,clean_area,clean_time,work_station_freq'},
+            {'interval': 121, 'props': 'auto_boost,led_switch,lidar_collision,station_key,station_led,volume,mute'},
+            {'interval': 151, 'props': 'total_clean_time,total_clean_areas,clean_counts,path_type'},
+            {'interval': 600, 'props': 'filter_l*,brush_l*'},
+            {'interval': 610, 'props': 'custom.uid,timing,forbid_mode,current_audio,map_memory,use_auto_area'},
         ],
     },
     'roidmi.vacuum.*': {
@@ -1592,7 +1604,6 @@ DEVICE_CUSTOMIZES = {
         'switch_properties': '',
         'select_properties': 'dryer,swing_mode',
         'number_properties': 'drying_time',
-        'position_reverse': False,
         'cover_position_mapping': {
             0: 50,   # Normal
             1: 100,  # Rising-limit
@@ -1738,6 +1749,11 @@ DEVICE_CUSTOMIZES = {
         'speed_property': 'favorite_level',
         'exclude_miot_services': None,
         'exclude_miot_properties': 'country_code,filter_used_time_dbg',
+        'chunk_coordinators': [
+            {'interval': 11, 'props': 'on,mode,favorite_level'},
+            {'interval': 121, 'props': 'alarm,physical_controls_locked,brightness,aqi_updata_heartbeat'},
+            {'interval': 300, 'props': 'filter_*'},
+        ],
     },
     'xiaomi.airp.mp4': {
         'switch_properties': 'anion,alarm',
@@ -1756,6 +1772,14 @@ DEVICE_CUSTOMIZES = {
         'brightness_for_on': 0,
         'brightness_for_off': 2,
         'exclude_miot_services': 'rfid,custom_service,filter_debug',
+    },
+    'xiaomi.airp.va5': {
+        'sensor_properties': 'fault,air_quality,pm1',
+        'switch_properties': 'on,uv',
+        'select_properties': 'air_purifier_favorite.fan_level,brightness',
+        'number_properties': 'update_heartbeat',
+        'button_actions': 'toggle,reset_filter_life',
+        'exclude_miot_services': 'custom_service,filter_debug,filter_tag',
     },
     'xiaomi.airp.*': {
         'exclude_miot_services': 'custom_service',
@@ -1811,8 +1835,16 @@ DEVICE_CUSTOMIZES = {
             {'interval': 35, 'props': 'fault,mode,reservation_left_time,cooking_weight'},
         ],
     },
+    'xiaomi.derh.13l': {
+        **CHUNK_1,
+        'binary_sensor_properties': 'is_warming_up',
+        'sensor_properties': 'fault,dry_left_time,delay_remain_time',
+        'switch_properties': 'delay,dry_after_off',
+        'select_properties': 'indicator_light.mode',
+        'number_properties': 'delay_time',
+    },
     'xiaomi.derh.lite': {
-        'chunk_properties': 1,
+        **CHUNK_1,
         'sensor_properties': 'fault,delay_remain_time',
         'switch_properties': 'alarm,delay',
         'select_properties': 'indicator_light.mode',
@@ -2145,7 +2177,9 @@ DEVICE_CUSTOMIZES = {
         'cloud_delay_update': 7,
     },
     'yeelink.light.*': {
+        'interval_seconds': 20,
         'switch_properties': 'bg_on,init_power_opt,fan_init_power_opt',
+        'chunk_coordinators': [],
     },
     'yeelink.mirror.bm1': {
         'switch_properties': 'heat_control',
@@ -2256,6 +2290,9 @@ DEVICE_CUSTOMIZES = {
     },
     'zhimi.airp.vb4:pm10_density': {
         'unit_of_measurement': 'µg/m³',
+    },
+    'zhimi.airp.*:moto_speed_rpm': {
+        'unit_of_measurement': 'rpm',
     },
     'zhimi.airpurifier.*': {
         'speed_property': 'favorite_level,favorite_fan_level',
@@ -2455,7 +2492,6 @@ DEVICE_CUSTOMIZES = {
         ],
     },
     '*.airer.*': {
-        'position_reverse': True,
         'sensor_properties': 'left_time',
         'switch_properties': 'dryer,uv',
         'select_properties': 'drying_level',
